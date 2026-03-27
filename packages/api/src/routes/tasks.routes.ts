@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { CreateTaskInput, UpdateTaskInput } from '@hubproject/shared'
 import * as taskService from '../services/task.service'
 
 export async function listTasksByProject(
@@ -9,7 +10,7 @@ export async function listTasksByProject(
 }
 
 export async function createTask(req: NextRequest): Promise<NextResponse> {
-  const body = await req.json()
+  const body = (await req.json()) as CreateTaskInput
   const task = await taskService.createTask(body)
   return NextResponse.json(task, { status: 201 })
 }
@@ -18,7 +19,7 @@ export async function updateTask(
   id: string,
   req: NextRequest
 ): Promise<NextResponse> {
-  const body = await req.json()
+  const body = (await req.json()) as UpdateTaskInput
   const task = await taskService.updateTask(id, body)
   return NextResponse.json(task)
 }
@@ -32,9 +33,8 @@ export async function reorderTask(
   id: string,
   req: NextRequest
 ): Promise<NextResponse> {
-  const body = await req.json()
-  const projectId = body.project_id as string
-  const newPosition = body.position as number
+  const body = (await req.json()) as { project_id: string; position: number }
+  const { project_id: projectId, position: newPosition } = body
   await taskService.reorderTask(projectId, id, newPosition)
   return NextResponse.json({ success: true })
 }
