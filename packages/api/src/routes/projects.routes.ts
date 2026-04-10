@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CreateProjectInput, UpdateProjectInput } from '@hubproject/shared'
 import * as projectService from '../services/project.service'
+import { UnauthorizedError } from '../lib/errors'
 
 export async function listProjects(): Promise<NextResponse> {
   const projects = await projectService.listProjects()
@@ -8,8 +9,9 @@ export async function listProjects(): Promise<NextResponse> {
 }
 
 export async function createProject(req: NextRequest): Promise<NextResponse> {
+  const userId = req.headers.get('x-user-id')
+  if (!userId) throw new UnauthorizedError('User ID not provided')
   const body = (await req.json()) as CreateProjectInput
-  const userId = req.headers.get('x-user-id')!
   const project = await projectService.createProject(body, userId)
   return NextResponse.json(project, { status: 201 })
 }

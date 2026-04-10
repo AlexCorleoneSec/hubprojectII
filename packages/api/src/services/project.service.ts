@@ -4,7 +4,7 @@ import * as projectRepo from '../repositories/project.repository'
 import { NotFoundError, ValidationError } from '../lib/errors'
 import type { CreateProjectInput, UpdateProjectInput, Project } from '@hubproject/shared'
 
-const SALT_ROUNDS = 10
+const SALT_ROUNDS = 8
 
 export async function listProjects(): Promise<Project[]> {
   return projectRepo.findAll()
