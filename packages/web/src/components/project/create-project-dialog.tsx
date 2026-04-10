@@ -67,9 +67,9 @@ export function CreateProjectDialog({ open, onOpenChange, onCreated }: CreatePro
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: -10 }}
                 transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                className="fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-50"
+                className="fixed inset-0 flex items-center justify-center p-4 z-50"
               >
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 w-full max-w-md">
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-accent-subtle flex items-center justify-center">
