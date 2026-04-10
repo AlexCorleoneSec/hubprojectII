@@ -1,4 +1,8 @@
 {
+  "buildCommand": "turbo run build --filter=@hubproject/web",
+  "outputDirectory": "packages/web/.next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "crons": [
     {
       "path": "/api/cron/overdue",

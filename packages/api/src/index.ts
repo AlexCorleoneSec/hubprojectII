@@ -7,6 +7,7 @@ export * as taskService from './services/task.service'
 export * as clientService from './services/client.service'
 export * as inviteService from './services/invite.service'
 export * as overdueService from './services/overdue.service'
+export { checkOverdueTasks } from './services/overdue.service'
 
 // Repositories
 export * as projectRepository from './repositories/project.repository'

@@ -3,7 +3,6 @@ import { AppError } from '../lib/errors'
 import * as projectsRoutes from './projects.routes'
 import * as tasksRoutes from './tasks.routes'
 import * as clientRoutes from './client.routes'
-import * as cronRoutes from './cron.routes'
 
 type RouteHandler = (
   req: NextRequest,
@@ -99,13 +98,6 @@ const routes: Route[] = [
     method: 'POST',
     pattern: /^\/client\/suggest\/?$/,
     handler: async (req) => clientRoutes.createSuggestion(req),
-  },
-
-  // Cron
-  {
-    method: 'POST',
-    pattern: /^\/cron\/overdue\/?$/,
-    handler: async (req) => cronRoutes.handleOverdue(req),
   },
 ]
 
