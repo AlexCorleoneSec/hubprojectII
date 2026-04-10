@@ -101,11 +101,20 @@ const routes: Route[] = [
   },
 ]
 
-export async function handleApiRoute(req: NextRequest): Promise<NextResponse> {
+export async function handleApiRoute(req: NextRequest, userId?: string): Promise<NextResponse> {
   try {
     const url = new URL(req.url)
     const path = url.pathname.replace(/^\/api/, '') || '/'
     const method = req.method.toUpperCase()
+
+    // Inject userId into headers without cloning the request body
+    if (userId) {
+      const origGet = req.headers.get.bind(req.headers)
+      req.headers.get = (name: string) => {
+        if (name.toLowerCase() === 'x-user-id') return userId
+        return origGet(name)
+      }
+    }
 
     for (const route of routes) {
       if (route.method !== method) continue

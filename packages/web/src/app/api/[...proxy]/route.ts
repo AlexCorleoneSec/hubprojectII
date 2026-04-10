@@ -29,17 +29,7 @@ async function withAuth(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
   }
 
-  const headers = new Headers(request.headers)
-  headers.set('x-user-id', user.id)
-
-  const authenticatedRequest = new NextRequest(request.url, {
-    method: request.method,
-    headers,
-    body: request.body,
-    signal: request.signal ?? undefined,
-  })
-
-  return handleApiRoute(authenticatedRequest)
+  return handleApiRoute(request, user.id)
 }
 
 export async function GET(request: NextRequest) {
