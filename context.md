@@ -61,17 +61,19 @@ Sistema de gerenciamento de projetos com foco em visualização de tarefas (Kanb
 
 ### Fluxo de Autenticação nas Chamadas
 ```
-Browser → api-client.ts → /api/[...proxy]/route.ts → handleApiRoute()
+Browser → api-client.ts → /api/[...proxy]/route.ts → handleApiRoute(req, userId)
                                 ↓
                      Extrai user da sessão Supabase (cookies)
-                     Injeta header x-user-id na request
+                     Passa userId como parâmetro para handleApiRoute
                      Retorna 401 se não autenticado
 ```
 
 - O proxy (`/api/[...proxy]/route.ts`) é o ponto de entrada de todas as chamadas da API interna.
-- Ele valida a sessão Supabase via cookies e injeta `x-user-id` antes de passar para os handlers.
-- Os route handlers em `packages/api` confiam no `x-user-id` injetado pelo proxy.
-- Rotas públicas (cliente externo) ficam em `/api/client/*` e passam pelo mesmo proxy, mas os handlers não exigem `x-user-id`.
+- Ele valida a sessão Supabase via cookies e passa `userId` como segundo parâmetro para `handleApiRoute`.
+- **NÃO** modifica headers nem clona o request — isso destrói o `ReadableStream` do body, quebrando `req.json()`.
+- `handleApiRoute(req, userId?)` repassa `userId` para cada `RouteHandler` como terceiro parâmetro.
+- Handlers que precisam do userId (ex: `createProject`) recebem-no diretamente, sem ler headers.
+- Rotas públicas (cliente externo) ficam em `/api/client/*` e passam pelo mesmo proxy, mas os handlers não exigem `userId`.
 
 ### Rotas disponíveis
 | Método | Path | Descrição |
@@ -93,23 +95,53 @@ Browser → api-client.ts → /api/[...proxy]/route.ts → handleApiRoute()
 | POST | `/api/client/suggest` | Cria sugestão de tarefa |
 | GET | `/api/cron/overdue` | Cron: marca tarefas atrasadas |
 
-## Limitações do Plano Vercel Hobby
+## Restrições Arquiteturais da Vercel
 
-### Timeout de 10 segundos
-- Todas as serverless functions têm timeout de **10s**.
-- Operações com bcrypt usam `SALT_ROUNDS = 8` (era 10) para reduzir CPU time (~70ms por hash).
-- O cron de overdue processa tarefas em massa — se o banco tiver milhares de tarefas, pode aproximar do limite.
+### Runtimes e onde cada arquivo roda
+
+| Arquivo | Runtime | Restrições |
+|---------|---------|------------|
+| `src/middleware.ts` | **Edge Runtime** | Sem Node.js APIs (fs, crypto, bcrypt). Apenas Web APIs. Sem `require()`. |
+| `src/app/api/**/route.ts` | **Node.js Serverless** | Timeout 10s (Hobby). Suporta Node.js completo. |
+| Componentes `'use client'` | **Browser** | Sem acesso a variáveis sem `NEXT_PUBLIC_`. |
+| Componentes sem diretiva | **Node.js SSR** | Roda no servidor durante render. |
+
+### Edge Runtime — o que NÃO pode ser feito
+O middleware roda no Edge Runtime. **Nunca colocar no middleware:**
+- `bcrypt`, `bcryptjs`, `crypto` (Node.js built-in)
+- `@supabase/supabase-js` direto — usar apenas `@supabase/ssr`
+- `fs`, `path`, `os` e qualquer módulo Node.js
+- Imports de `packages/api` (contém bcrypt e crypto)
+
+### Serverless Functions — comportamento do Request
+- O body de um `NextRequest` é um `ReadableStream` que só pode ser lido **uma vez**.
+- **Nunca** criar `new NextRequest(url, { body: request.body })` para clonar — o stream fica locked e `req.json()` falha silenciosamente.
+- Para passar contexto (ex: userId) entre camadas, usar **parâmetros de função**, não headers nem clonagem.
+- O proxy injeta `userId` via parâmetro: `handleApiRoute(request, user.id)`.
+
+### Serverless Functions — timeout
+- Plano Hobby: **10 segundos** por função.
+- Operações com bcrypt usam `SALT_ROUNDS = 8` para manter ~70ms por hash.
+- Nunca fazer loops de queries no banco (N+1) — sempre buscar em batch.
 
 ### Cron Jobs
-- Máximo 1 cron por projeto no plano Hobby.
-- Intervalo mínimo: **diário** (`0 0 * * *`).
-- O endpoint do cron é `GET /api/cron/overdue`, protegido por `Authorization: Bearer {CRON_SECRET}`.
-- A Vercel injeta o header automaticamente ao chamar o cron.
+- Plano Hobby: **1 cron por projeto**, intervalo mínimo **diário** (`0 0 * * *`).
+- A Vercel chama o endpoint com `GET` (não POST).
+- Endpoint dedicado em `src/app/api/cron/overdue/route.ts` — não roteado pelo proxy.
+- Protegido por `Authorization: Bearer {CRON_SECRET}`.
 
-### Edge Runtime (Middleware)
-- O middleware (`src/middleware.ts`) roda no Edge Runtime da Vercel.
-- Faz uma chamada ao Supabase para validar sessão — latência adicional de 100-300ms.
-- Não executa bcrypt nem operações CPU-intensivas.
+### Monorepo + Vercel
+- O `vercel.json` fica na **raiz** do monorepo com `buildCommand`, `outputDirectory` e `framework`.
+- `buildCommand`: `turbo run build --filter=@hubproject/web`
+- `outputDirectory`: `.next` (relativo ao app Next.js que a Vercel resolve internamente)
+- A Vercel detecta Turborepo e ajusta o root internamente para `packages/web`.
+- `transpilePackages` no `next.config.mjs` é obrigatório para `@hubproject/shared` e `@hubproject/api`.
+
+### TypeScript no build da Vercel
+- O build da Vercel roda `tsc` estrito — erros de tipo que passam localmente podem falhar em CI.
+- Testar localmente com `npm run build` antes de fazer push sempre que mudar tipos.
+- `import type` importa apenas o tipo, não o valor — não pode ser usado como construtor ou instanciado.
+- Propriedades `readonly` (ex: `Headers.prototype.get`) não podem ser reatribuídas mesmo em runtime.
 
 ## Banco de Dados
 
