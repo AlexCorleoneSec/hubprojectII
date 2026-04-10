@@ -36,8 +36,8 @@ async function withAuth(request: NextRequest): Promise<NextResponse> {
     method: request.method,
     headers,
     body: request.body,
-    duplex: 'half',
-  } as RequestInit & { duplex: string })
+    signal: request.signal ?? undefined,
+  })
 
   return handleApiRoute(authenticatedRequest)
 }
