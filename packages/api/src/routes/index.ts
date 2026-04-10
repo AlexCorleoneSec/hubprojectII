@@ -6,7 +6,8 @@ import * as clientRoutes from './client.routes'
 
 type RouteHandler = (
   req: NextRequest,
-  params: Record<string, string>
+  params: Record<string, string>,
+  userId?: string
 ) => Promise<NextResponse>
 
 interface Route {
@@ -25,7 +26,7 @@ const routes: Route[] = [
   {
     method: 'POST',
     pattern: /^\/projects\/?$/,
-    handler: async (req) => projectsRoutes.createProject(req),
+    handler: async (req, _params, userId) => projectsRoutes.createProject(req, userId),
   },
   {
     method: 'GET',
@@ -107,15 +108,6 @@ export async function handleApiRoute(req: NextRequest, userId?: string): Promise
     const path = url.pathname.replace(/^\/api/, '') || '/'
     const method = req.method.toUpperCase()
 
-    // Inject userId into headers without cloning the request body
-    if (userId) {
-      const origGet = req.headers.get.bind(req.headers)
-      req.headers.get = (name: string) => {
-        if (name.toLowerCase() === 'x-user-id') return userId
-        return origGet(name)
-      }
-    }
-
     for (const route of routes) {
       if (route.method !== method) continue
 
@@ -123,7 +115,7 @@ export async function handleApiRoute(req: NextRequest, userId?: string): Promise
       if (!match) continue
 
       const params = match.groups ?? {}
-      return await route.handler(req, params)
+      return await route.handler(req, params, userId)
     }
 
     return NextResponse.json(

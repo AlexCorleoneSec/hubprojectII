@@ -8,8 +8,7 @@ export async function listProjects(): Promise<NextResponse> {
   return NextResponse.json(projects)
 }
 
-export async function createProject(req: NextRequest): Promise<NextResponse> {
-  const userId = req.headers.get('x-user-id')
+export async function createProject(req: NextRequest, userId?: string): Promise<NextResponse> {
   if (!userId) throw new UnauthorizedError('User ID not provided')
   const body = (await req.json()) as CreateProjectInput
   const project = await projectService.createProject(body, userId)
