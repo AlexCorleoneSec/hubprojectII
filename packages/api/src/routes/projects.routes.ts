@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CreateProjectInput, UpdateProjectInput } from '@hubproject/shared'
 import * as projectService from '../services/project.service'
+import * as timelogService from '../services/timelog.service'
 import { UnauthorizedError } from '../lib/errors'
 
 export async function listProjects(): Promise<NextResponse> {
@@ -32,4 +33,11 @@ export async function updateProject(
 export async function archiveProject(id: string): Promise<NextResponse> {
   const project = await projectService.archiveProject(id)
   return NextResponse.json(project)
+}
+
+export async function getProjectTimelogs(id: string, req: NextRequest): Promise<NextResponse> {
+  const url = new URL(req.url)
+  const month = url.searchParams.get('month') ?? undefined
+  const summary = await timelogService.getProjectTimelogs(id, month)
+  return NextResponse.json(summary)
 }

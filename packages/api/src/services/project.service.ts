@@ -36,6 +36,7 @@ export async function createProject(
       description: input.description,
       client_pin_hash,
       client_token,
+      customer_id: input.customer_id ?? undefined,
     },
     userId
   )
@@ -59,6 +60,7 @@ export async function updateProject(
   if (input.client_pin) {
     updateData.client_pin_hash = await bcrypt.hash(input.client_pin, SALT_ROUNDS)
   }
+  if (input.customer_id !== undefined) updateData.customer_id = input.customer_id
 
   return projectRepo.update(id, updateData)
 }

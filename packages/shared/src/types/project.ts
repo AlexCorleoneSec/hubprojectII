@@ -7,6 +7,7 @@ export interface Project {
   status: ProjectStatus
   client_token: string
   client_pin_hash: string
+  customer_id: string | null
   created_by: string
   created_at: string
   updated_at: string
@@ -15,7 +16,8 @@ export interface Project {
 export interface CreateProjectInput {
   name: string
   description?: string
-  client_pin: string // plain text, hashed before storing
+  client_pin: string
+  customer_id?: string
 }
 
 export interface UpdateProjectInput {
@@ -23,4 +25,5 @@ export interface UpdateProjectInput {
   description?: string
   status?: ProjectStatus
   client_pin?: string
+  customer_id?: string | null
 }

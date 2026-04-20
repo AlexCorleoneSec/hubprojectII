@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, FolderPlus } from 'lucide-react'
 import { api } from '@/lib/api-client'
+import type { Customer } from '@hubproject/shared'
 
 interface CreateProjectDialogProps {
   open: boolean
@@ -16,8 +17,16 @@ export function CreateProjectDialog({ open, onOpenChange, onCreated }: CreatePro
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [pin, setPin] = useState('')
+  const [customerId, setCustomerId] = useState('')
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      api.get<Customer[]>('/customers').then(setCustomers).catch(() => {})
+    }
+  }, [open])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,12 +44,14 @@ export function CreateProjectDialog({ open, onOpenChange, onCreated }: CreatePro
         name,
         description: description || undefined,
         client_pin: pin,
+        customer_id: customerId || undefined,
       })
       onCreated()
       onOpenChange(false)
       setName('')
       setDescription('')
       setPin('')
+      setCustomerId('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar projeto')
     } finally {
@@ -111,6 +122,26 @@ export function CreateProjectDialog({ open, onOpenChange, onCreated }: CreatePro
                         className="w-full px-3 py-2.5 bg-surface-3 border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all resize-none"
                       />
                     </div>
+
+                    {customers.length > 0 && (
+                      <div>
+                        <label className="block text-xs text-text-secondary mb-1.5">
+                          Cliente <span className="text-text-muted">(opcional)</span>
+                        </label>
+                        <select
+                          value={customerId}
+                          onChange={(e) => setCustomerId(e.target.value)}
+                          className="w-full h-10 px-3 bg-surface-3 border border-border rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
+                        >
+                          <option value="">Sem cliente associado</option>
+                          {customers.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}{c.company ? ` — ${c.company}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-xs text-text-secondary mb-1.5">

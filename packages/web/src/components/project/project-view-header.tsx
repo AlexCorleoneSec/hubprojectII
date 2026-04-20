@@ -1,14 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, LayoutGrid, List, Grid3x3, Settings } from 'lucide-react'
+import { Plus, LayoutGrid, List, Grid3x3, Settings, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { CreateTaskDialog } from '@/components/task/create-task-dialog'
 
 interface ProjectViewHeaderProps {
   projectId: string
-  activeView: 'kanban' | 'lista' | 'matriz'
+  activeView: 'kanban' | 'lista' | 'matriz' | 'calendario'
   onTaskCreated: () => void
 }
 
@@ -16,6 +16,7 @@ const views = [
   { id: 'kanban' as const, label: 'Kanban', icon: LayoutGrid, href: 'kanban' },
   { id: 'lista' as const, label: 'Lista', icon: List, href: 'lista' },
   { id: 'matriz' as const, label: 'Matriz', icon: Grid3x3, href: 'matriz' },
+  { id: 'calendario' as const, label: 'Calendário', icon: Calendar, href: 'calendario' },
 ]
 
 export function ProjectViewHeader({ projectId, activeView, onTaskCreated }: ProjectViewHeaderProps) {

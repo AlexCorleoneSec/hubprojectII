@@ -6,19 +6,17 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
-  FolderKanban,
-  Settings,
   LogOut,
   ChevronLeft,
-  Plus,
-  Bell,
   Palette,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Projetos' },
+  { href: '/clientes', icon: Users, label: 'Clientes' },
   { href: '/design-system', icon: Palette, label: 'Design System' },
 ]
 
@@ -67,7 +65,9 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = item.href === '/'
+            ? pathname === '/'
+            : pathname.startsWith(item.href)
           return (
             <Link
               key={item.href}

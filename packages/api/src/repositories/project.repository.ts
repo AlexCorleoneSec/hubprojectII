@@ -40,6 +40,7 @@ export async function create(
   data: Omit<CreateProjectInput, 'client_pin'> & {
     client_pin_hash: string
     client_token: string
+    customer_id?: string | null
   },
   userId: string
 ): Promise<Project> {
@@ -50,6 +51,7 @@ export async function create(
       description: data.description ?? null,
       client_pin_hash: data.client_pin_hash,
       client_token: data.client_token,
+      customer_id: data.customer_id ?? null,
       created_by: userId,
     })
     .select('*')
@@ -61,13 +63,14 @@ export async function create(
 
 export async function update(
   id: string,
-  data: Omit<UpdateProjectInput, 'client_pin'> & { client_pin_hash?: string }
+  data: Omit<UpdateProjectInput, 'client_pin'> & { client_pin_hash?: string; customer_id?: string | null }
 ): Promise<Project> {
   const updatePayload: Record<string, unknown> = {}
   if (data.name !== undefined) updatePayload.name = data.name
   if (data.description !== undefined) updatePayload.description = data.description
   if (data.status !== undefined) updatePayload.status = data.status
   if (data.client_pin_hash !== undefined) updatePayload.client_pin_hash = data.client_pin_hash
+  if (data.customer_id !== undefined) updatePayload.customer_id = data.customer_id
   updatePayload.updated_at = new Date().toISOString()
 
   const { data: project, error } = await supabase

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, FolderKanban, MoreHorizontal, ExternalLink } from 'lucide-react'
-import { type Project, PROJECT_STATUSES } from '@hubproject/shared'
+import { Plus, FolderKanban, MoreHorizontal, ExternalLink, Building2 } from 'lucide-react'
+import { type Project, type Customer, PROJECT_STATUSES } from '@hubproject/shared'
 import { api } from '@/lib/api-client'
 import { cn, formatDate } from '@/lib/utils'
 import { CreateProjectDialog } from '@/components/project/create-project-dialog'
@@ -11,6 +11,7 @@ import Link from 'next/link'
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
 
@@ -20,8 +21,12 @@ export default function DashboardPage() {
 
   async function loadProjects() {
     try {
-      const data = await api.get<Project[]>('/projects')
-      setProjects(data)
+      const [projectData, customerData] = await Promise.all([
+        api.get<Project[]>('/projects'),
+        api.get<Customer[]>('/customers').catch(() => [] as Customer[]),
+      ])
+      setProjects(projectData)
+      setCustomers(customerData)
     } catch (err) {
       console.error('Failed to load projects:', err)
     } finally {
@@ -73,6 +78,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project, i) => {
             const statusConfig = PROJECT_STATUSES[project.status]
+            const customer = customers.find((c) => c.id === project.customer_id)
             return (
               <motion.div
                 key={project.id}
@@ -106,6 +112,12 @@ export default function DashboardPage() {
                     <h3 className="text-sm font-medium text-text-primary mb-1 group-hover:text-gradient transition-all">
                       {project.name}
                     </h3>
+                    {customer && (
+                      <p className="text-xs text-text-muted flex items-center gap-1 mb-1">
+                        <Building2 className="w-3 h-3 shrink-0" />
+                        {customer.name}
+                      </p>
+                    )}
                     {project.description && (
                       <p className="text-xs text-text-muted line-clamp-2 mb-4">
                         {project.description}

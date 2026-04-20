@@ -4,6 +4,7 @@ import * as projectsRoutes from './projects.routes'
 import * as tasksRoutes from './tasks.routes'
 import * as clientRoutes from './client.routes'
 import * as subtasksRoutes from './subtasks.routes'
+import * as customersRoutes from './customers.routes'
 
 type RouteHandler = (
   req: NextRequest,
@@ -19,6 +20,11 @@ interface Route {
 
 const routes: Route[] = [
   // Projects
+  {
+    method: 'GET',
+    pattern: /^\/projects\/(?<id>[^/]+)\/timelogs\/?$/,
+    handler: async (req, params) => projectsRoutes.getProjectTimelogs(params.id, req),
+  },
   {
     method: 'GET',
     pattern: /^\/projects\/?$/,
@@ -82,6 +88,33 @@ const routes: Route[] = [
     method: 'POST',
     pattern: /^\/tasks\/(?<id>[^/]+)\/reject\/?$/,
     handler: async (req, params) => tasksRoutes.rejectSuggestion(params.id),
+  },
+
+  // Customers
+  {
+    method: 'GET',
+    pattern: /^\/customers\/?$/,
+    handler: async (req) => customersRoutes.listCustomers(),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/customers\/?$/,
+    handler: async (req, _params, userId) => customersRoutes.createCustomer(req, userId),
+  },
+  {
+    method: 'GET',
+    pattern: /^\/customers\/(?<id>[^/]+)\/?$/,
+    handler: async (req, params) => customersRoutes.getCustomer(params.id),
+  },
+  {
+    method: 'PATCH',
+    pattern: /^\/customers\/(?<id>[^/]+)\/?$/,
+    handler: async (req, params) => customersRoutes.updateCustomer(params.id, req),
+  },
+  {
+    method: 'DELETE',
+    pattern: /^\/customers\/(?<id>[^/]+)\/?$/,
+    handler: async (req, params) => customersRoutes.deleteCustomer(params.id),
   },
 
   // Subtasks
