@@ -14,6 +14,8 @@ export interface Task {
   start_date: string | null
   due_date: string | null
   assigned_to: string | null
+  tags: string[]
+  estimated_hours: number | null
   is_suggestion: boolean
   suggested_by_name: string | null
   suggested_by_email: string | null
@@ -40,10 +42,12 @@ export interface UpdateTaskInput {
   description?: string
   status?: TaskStatus
   priority?: TaskPriority
-  quadrant?: TaskQuadrant
+  quadrant?: TaskQuadrant | null
   start_date?: string | null
   due_date?: string | null
   assigned_to?: string | null
+  tags?: string[]
+  estimated_hours?: number | null
   position?: number
 }
 

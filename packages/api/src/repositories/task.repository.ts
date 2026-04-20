@@ -62,6 +62,8 @@ export async function update(id: string, data: UpdateTaskInput & Partial<Pick<Ta
   if (data.start_date !== undefined) updatePayload.start_date = data.start_date
   if (data.due_date !== undefined) updatePayload.due_date = data.due_date
   if (data.assigned_to !== undefined) updatePayload.assigned_to = data.assigned_to
+  if (data.tags !== undefined) updatePayload.tags = data.tags
+  if (data.estimated_hours !== undefined) updatePayload.estimated_hours = data.estimated_hours
   if (data.position !== undefined) updatePayload.position = data.position
   if (data.is_suggestion !== undefined) updatePayload.is_suggestion = data.is_suggestion
   if (data.suggestion_status !== undefined) updatePayload.suggestion_status = data.suggestion_status

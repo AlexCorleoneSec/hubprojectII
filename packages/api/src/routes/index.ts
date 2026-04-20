@@ -3,6 +3,7 @@ import { AppError } from '../lib/errors'
 import * as projectsRoutes from './projects.routes'
 import * as tasksRoutes from './tasks.routes'
 import * as clientRoutes from './client.routes'
+import * as subtasksRoutes from './subtasks.routes'
 
 type RouteHandler = (
   req: NextRequest,
@@ -81,6 +82,45 @@ const routes: Route[] = [
     method: 'POST',
     pattern: /^\/tasks\/(?<id>[^/]+)\/reject\/?$/,
     handler: async (req, params) => tasksRoutes.rejectSuggestion(params.id),
+  },
+
+  // Subtasks
+  {
+    method: 'GET',
+    pattern: /^\/tasks\/(?<taskId>[^/]+)\/subtasks\/?$/,
+    handler: async (req, params) => subtasksRoutes.listSubtasks(params.taskId),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/tasks\/(?<taskId>[^/]+)\/subtasks\/?$/,
+    handler: async (req, params) => subtasksRoutes.createSubtask(params.taskId, req),
+  },
+  {
+    method: 'PATCH',
+    pattern: /^\/subtasks\/(?<id>[^/]+)\/?$/,
+    handler: async (req, params) => subtasksRoutes.updateSubtask(params.id, req),
+  },
+  {
+    method: 'DELETE',
+    pattern: /^\/subtasks\/(?<id>[^/]+)\/?$/,
+    handler: async (req, params) => subtasksRoutes.deleteSubtask(params.id),
+  },
+
+  // Time Logs
+  {
+    method: 'GET',
+    pattern: /^\/subtasks\/(?<subtaskId>[^/]+)\/timelogs\/?$/,
+    handler: async (req, params) => subtasksRoutes.listTimeLogs(params.subtaskId),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/subtasks\/(?<subtaskId>[^/]+)\/timelogs\/?$/,
+    handler: async (req, params) => subtasksRoutes.createTimeLog(params.subtaskId, req),
+  },
+  {
+    method: 'DELETE',
+    pattern: /^\/timelogs\/(?<id>[^/]+)\/?$/,
+    handler: async (req, params) => subtasksRoutes.deleteTimeLog(params.id),
   },
 
   // Client

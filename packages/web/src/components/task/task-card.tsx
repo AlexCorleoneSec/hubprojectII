@@ -1,19 +1,19 @@
 'use client'
 
+import { memo } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { motion } from 'framer-motion'
-import { Calendar, AlertTriangle, GripVertical } from 'lucide-react'
+import { Calendar, AlertTriangle, Check } from 'lucide-react'
 import { type Task, TASK_PRIORITIES, QUADRANTS } from '@hubproject/shared'
 import { cn, formatDate } from '@/lib/utils'
 
 interface TaskCardProps {
   task: Task
-  onUpdate: () => void
+  onCardClick: (task: Task) => void
   isDragging?: boolean
 }
 
-export function TaskCard({ task, onUpdate, isDragging }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onCardClick, isDragging }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -36,25 +36,22 @@ export function TaskCard({ task, onUpdate, isDragging }: TaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => !isSortableDragging && onCardClick(task)}
       className={cn(
-        'glass-card p-3 cursor-pointer group',
-        isSortableDragging && 'opacity-50',
-        isDragging && 'shadow-glow rotate-2 scale-105',
-        isOverdue && 'border-status-error/40'
+        'glass-card p-3 cursor-pointer select-none touch-manipulation',
+        isSortableDragging && 'opacity-40',
+        isDragging && 'shadow-glow rotate-1 scale-[1.03] cursor-grabbing',
+        isOverdue && 'border-status-error/40',
+        !isDragging && 'hover:border-accent/30 transition-colors'
       )}
     >
-      {/* Drag handle + priority */}
+      {/* Priority + overdue */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <button
-            {...attributes}
-            {...listeners}
-            className="w-5 h-5 flex items-center justify-center text-text-muted opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
-          >
-            <GripVertical className="w-3 h-3" />
-          </button>
           <div
-            className="w-1.5 h-1.5 rounded-full"
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
             style={{ backgroundColor: priorityConfig.color }}
           />
           <span className="text-[10px] text-text-muted">{priorityConfig.label}</span>
@@ -68,24 +65,48 @@ export function TaskCard({ task, onUpdate, isDragging }: TaskCardProps) {
       </div>
 
       {/* Title */}
-      <h4 className="text-sm text-text-primary font-medium mb-2 leading-snug">
+      <h4 className="text-sm text-text-primary font-medium mb-2 leading-snug line-clamp-2">
         {task.title}
       </h4>
 
+      {/* Tags */}
+      {task.tags && task.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {task.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20"
+            >
+              {tag}
+            </span>
+          ))}
+          {task.tags.length > 3 && (
+            <span className="text-[9px] text-text-muted">+{task.tags.length - 3}</span>
+          )}
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="flex items-center justify-between">
-        {task.due_date && (
-          <div className={cn(
-            'flex items-center gap-1 text-[10px]',
-            isOverdue ? 'text-status-error' : 'text-text-muted'
-          )}>
-            <Calendar className="w-3 h-3" />
-            {formatDate(task.due_date)}
-          </div>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {task.due_date && (
+            <div className={cn(
+              'flex items-center gap-1 text-[10px]',
+              isOverdue ? 'text-status-error' : 'text-text-muted'
+            )}>
+              <Calendar className="w-3 h-3" />
+              {formatDate(task.due_date)}
+            </div>
+          )}
+          {task.estimated_hours != null && (
+            <span className="text-[10px] text-text-muted">
+              {task.estimated_hours}h est.
+            </span>
+          )}
+        </div>
         {quadrantConfig && (
           <span
-            className="text-[10px] px-1.5 py-0.5 rounded-full"
+            className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0"
             style={{
               backgroundColor: `${quadrantConfig.color}15`,
               color: quadrantConfig.color,
@@ -97,4 +118,4 @@ export function TaskCard({ task, onUpdate, isDragging }: TaskCardProps) {
       </div>
     </div>
   )
-}
+})
