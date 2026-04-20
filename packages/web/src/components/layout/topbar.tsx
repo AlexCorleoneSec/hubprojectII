@@ -9,6 +9,7 @@ function getPageTitle(pathname: string): string {
   if (pathname.includes('/lista')) return 'Lista'
   if (pathname.includes('/matriz')) return 'Matriz'
   if (pathname.includes('/configuracoes')) return 'Configurações'
+  if (pathname === '/design-system') return 'Design System'
   return 'HubProject'
 }
 

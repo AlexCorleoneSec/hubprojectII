@@ -12,12 +12,14 @@ import {
   ChevronLeft,
   Plus,
   Bell,
+  Palette,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Projetos' },
+  { href: '/design-system', icon: Palette, label: 'Design System' },
 ]
 
 export function Sidebar() {
