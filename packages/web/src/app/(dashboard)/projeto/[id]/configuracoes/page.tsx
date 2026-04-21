@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Settings,
@@ -21,11 +21,14 @@ import { cn } from '@/lib/utils'
 
 export default function ConfiguracoesPage() {
   const params = useParams()
+  const router = useRouter()
   const projectId = params.id as string
   const [project, setProject] = useState<Project | null>(null)
   const [suggestions, setSuggestions] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
+  const [archiving, setArchiving] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -61,6 +64,17 @@ export default function ConfiguracoesPage() {
       loadData()
     } catch (err) {
       console.error('Failed to reject:', err)
+    }
+  }
+
+  async function handleArchive() {
+    setArchiving(true)
+    try {
+      await api.delete(`/projects/${projectId}`)
+      router.push('/')
+    } catch (err) {
+      console.error('Failed to archive:', err)
+      setArchiving(false)
     }
   }
 
@@ -163,7 +177,7 @@ export default function ConfiguracoesPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="glass-card p-5"
+        className="glass-card p-5 mb-4"
       >
         <h3 className="text-sm font-medium text-text-primary mb-3">Status do Projeto</h3>
         <div className="flex gap-2">
@@ -186,6 +200,51 @@ export default function ConfiguracoesPage() {
             </button>
           ))}
         </div>
+      </motion.div>
+
+      {/* Danger zone */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="glass-card p-5 border-red-500/10"
+      >
+        <h3 className="text-sm font-medium text-text-primary mb-1">Zona de Perigo</h3>
+        <p className="text-xs text-text-muted mb-4">
+          Arquivar o projeto o remove da lista principal. Os dados são preservados.
+        </p>
+
+        {!showArchiveConfirm ? (
+          <button
+            onClick={() => setShowArchiveConfirm(true)}
+            className="flex items-center gap-2 h-9 px-4 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl text-sm transition-all"
+          >
+            <Archive className="w-4 h-4" />
+            Arquivar projeto
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-red-400 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              Tem certeza? O projeto será arquivado e não aparecerá mais na lista.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowArchiveConfirm(false)}
+                className="h-9 px-4 rounded-xl text-sm text-text-secondary hover:bg-surface-3 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleArchive}
+                disabled={archiving}
+                className="flex items-center gap-2 h-9 px-4 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50 rounded-xl text-sm transition-all"
+              >
+                {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar arquivamento'}
+              </button>
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   )

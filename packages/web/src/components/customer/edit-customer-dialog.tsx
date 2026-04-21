@@ -1,22 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Building2 } from 'lucide-react'
+import { X, Loader2, Pencil } from 'lucide-react'
 import { api } from '@/lib/api-client'
 import type { Customer } from '@hubproject/shared'
 
-interface CreateCustomerDialogProps {
+interface EditCustomerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated: () => void
+  customer: Customer
+  onUpdated: () => void
 }
 
 const inputClass =
   'w-full h-10 px-3 bg-surface-3 border border-border rounded-xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all'
 
-export function CreateCustomerDialog({ open, onOpenChange, onCreated }: CreateCustomerDialogProps) {
+export function EditCustomerDialog({ open, onOpenChange, customer, onUpdated }: EditCustomerDialogProps) {
   const [company, setCompany] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -25,23 +26,33 @@ export function CreateCustomerDialog({ open, onOpenChange, onCreated }: CreateCu
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (open) {
+      setCompany(customer.company)
+      setName(customer.name ?? '')
+      setEmail(customer.email ?? '')
+      setPhone(customer.phone ?? '')
+      setNotes(customer.notes ?? '')
+      setError(null)
+    }
+  }, [open, customer])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      await api.post<Customer>('/customers', {
+      await api.patch<Customer>(`/customers/${customer.id}`, {
         company,
-        name: name || undefined,
-        email: email || undefined,
-        phone: phone || undefined,
-        notes: notes || undefined,
+        name: name || null,
+        email: email || null,
+        phone: phone || null,
+        notes: notes || null,
       })
-      onCreated()
+      onUpdated()
       onOpenChange(false)
-      setCompany(''); setName(''); setEmail(''); setPhone(''); setNotes('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar empresa')
+      setError(err instanceof Error ? err.message : 'Erro ao salvar alterações')
     } finally {
       setLoading(false)
     }
@@ -70,10 +81,10 @@ export function CreateCustomerDialog({ open, onOpenChange, onCreated }: CreateCu
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-accent-subtle flex items-center justify-center">
-                        <Building2 className="w-4 h-4 text-accent" />
+                        <Pencil className="w-4 h-4 text-accent" />
                       </div>
                       <Dialog.Title className="text-base font-medium text-text-primary">
-                        Nova Empresa
+                        Editar Empresa
                       </Dialog.Title>
                     </div>
                     <Dialog.Close className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-3 transition-all">
@@ -154,7 +165,7 @@ export function CreateCustomerDialog({ open, onOpenChange, onCreated }: CreateCu
                         disabled={loading || !company}
                         className="h-9 px-5 bg-gradient-accent hover:opacity-90 disabled:opacity-50 rounded-xl text-white text-sm font-medium flex items-center gap-2 transition-all"
                       >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar empresa'}
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar alterações'}
                       </button>
                     </div>
                   </form>

@@ -25,7 +25,7 @@ export async function getCustomerWithProjects(id: string): Promise<CustomerWithP
 }
 
 export async function createCustomer(input: CreateCustomerInput, userId: string): Promise<Customer> {
-  if (!input.name?.trim()) throw new ValidationError('Customer name is required')
+  if (!input.company?.trim()) throw new ValidationError('Company name is required')
   return repo.create(input, userId)
 }
 

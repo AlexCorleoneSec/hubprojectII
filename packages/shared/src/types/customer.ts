@@ -2,10 +2,10 @@ import type { Project } from './project'
 
 export interface Customer {
   id: string
-  name: string
+  name: string | null
   email: string | null
   phone: string | null
-  company: string | null
+  company: string
   notes: string | null
   created_by: string
   created_at: string
@@ -21,10 +21,10 @@ export interface CustomerWithProjectCount extends Customer {
 }
 
 export interface CreateCustomerInput {
-  name: string
+  company: string
+  name?: string
   email?: string
   phone?: string
-  company?: string
   notes?: string
 }
 

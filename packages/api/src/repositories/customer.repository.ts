@@ -13,7 +13,7 @@ export async function findAll(): Promise<CustomerWithProjectCount[]> {
   const { data, error } = await supabase
     .from(TABLE)
     .select('*, projects(count)')
-    .order('name', { ascending: true })
+    .order('company', { ascending: true })
   if (error) throw error
   return data as CustomerWithProjectCount[]
 }
@@ -47,10 +47,10 @@ export async function create(input: CreateCustomerInput, userId: string): Promis
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
-      name: input.name,
+      company: input.company,
+      name: input.name ?? null,
       email: input.email ?? null,
       phone: input.phone ?? null,
-      company: input.company ?? null,
       notes: input.notes ?? null,
       created_by: userId,
     })

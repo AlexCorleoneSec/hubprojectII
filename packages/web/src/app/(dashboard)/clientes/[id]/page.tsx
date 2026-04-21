@@ -1,20 +1,26 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Mail, Phone, FolderKanban, FileText } from 'lucide-react'
+import { ArrowLeft, Building2, Mail, Phone, FolderKanban, FileText, Pencil, Trash2, AlertTriangle, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api-client'
 import { formatDate } from '@/lib/utils'
 import { PROJECT_STATUSES } from '@hubproject/shared'
 import type { CustomerWithProjects } from '@hubproject/shared'
+import { EditCustomerDialog } from '@/components/customer/edit-customer-dialog'
 
 export default function CustomerDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const customerId = params.id as string
   const [customer, setCustomer] = useState<CustomerWithProjects | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showEdit, setShowEdit] = useState(false)
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => { loadCustomer() }, [customerId])
 
@@ -29,6 +35,18 @@ export default function CustomerDetailPage() {
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await api.delete(`/customers/${customerId}`)
+      router.push('/clientes')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Erro ao excluir empresa')
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-3xl space-y-4">
@@ -39,7 +57,7 @@ export default function CustomerDetailPage() {
   }
 
   if (!customer) {
-    return <p className="text-text-muted text-sm">Cliente não encontrado.</p>
+    return <p className="text-text-muted text-sm">Empresa não encontrada.</p>
   }
 
   return (
@@ -49,7 +67,7 @@ export default function CustomerDetailPage() {
         className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Voltar para Clientes
+        Voltar para Empresas
       </Link>
 
       {/* Customer card */}
@@ -63,9 +81,9 @@ export default function CustomerDetailPage() {
             <Building2 className="w-6 h-6 text-accent" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold text-text-primary">{customer.name}</h2>
-            {customer.company && (
-              <p className="text-sm text-text-muted mt-0.5">{customer.company}</p>
+            <h2 className="text-lg font-semibold text-text-primary">{customer.company}</h2>
+            {customer.name && (
+              <p className="text-sm text-text-muted mt-0.5">{customer.name}</p>
             )}
 
             <div className="flex flex-wrap items-center gap-4 mt-3">
@@ -92,7 +110,54 @@ export default function CustomerDetailPage() {
               </div>
             )}
           </div>
+
+          <div className="flex gap-1.5 shrink-0">
+            <button
+              onClick={() => setShowEdit(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-3 transition-all"
+              title="Editar"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowConfirmDelete(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-500/10 transition-all"
+              title="Excluir"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
+
+        {/* Inline delete confirmation */}
+        {showConfirmDelete && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 pt-4 border-t border-red-500/20"
+          >
+            <p className="text-xs text-red-400 flex items-center gap-1.5 mb-3">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              Tem certeza? Esta ação não pode ser desfeita. Os projetos associados perderão o vínculo.
+            </p>
+            {deleteError && <p className="text-xs text-status-error mb-2">{deleteError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowConfirmDelete(false); setDeleteError(null) }}
+                className="h-8 px-3 rounded-xl text-xs text-text-secondary hover:bg-surface-3 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="h-8 px-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50 rounded-xl text-xs flex items-center gap-1.5 transition-all"
+              >
+                {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Excluir empresa'}
+              </button>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Projects list */}
@@ -105,7 +170,7 @@ export default function CustomerDetailPage() {
 
       {customer.projects.length === 0 ? (
         <div className="glass-card p-8 text-center">
-          <p className="text-text-muted text-sm">Nenhum projeto associado a este cliente</p>
+          <p className="text-text-muted text-sm">Nenhum projeto associado a esta empresa</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -144,6 +209,13 @@ export default function CustomerDetailPage() {
           })}
         </div>
       )}
+
+      <EditCustomerDialog
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        customer={customer}
+        onUpdated={loadCustomer}
+      />
     </div>
   )
 }

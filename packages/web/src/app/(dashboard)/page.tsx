@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, FolderKanban, MoreHorizontal, ExternalLink, Building2 } from 'lucide-react'
+import { Plus, FolderKanban, Pencil, ExternalLink, Building2 } from 'lucide-react'
 import { type Project, type Customer, PROJECT_STATUSES } from '@hubproject/shared'
 import { api } from '@/lib/api-client'
-import { cn, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { CreateProjectDialog } from '@/components/project/create-project-dialog'
+import { EditProjectDialog } from '@/components/project/edit-project-dialog'
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -14,6 +15,7 @@ export default function DashboardPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
 
   useEffect(() => {
     loadProjects()
@@ -102,10 +104,11 @@ export default function DashboardPage() {
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
+                          setEditingProject(project)
                         }}
                         className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-text-primary hover:bg-surface-4 opacity-0 group-hover:opacity-100 transition-all"
                       >
-                        <MoreHorizontal className="w-3.5 h-3.5" />
+                        <Pencil className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
@@ -115,7 +118,7 @@ export default function DashboardPage() {
                     {customer && (
                       <p className="text-xs text-text-muted flex items-center gap-1 mb-1">
                         <Building2 className="w-3 h-3 shrink-0" />
-                        {customer.name}
+                        {customer.company}
                       </p>
                     )}
                     {project.description && (
@@ -145,6 +148,15 @@ export default function DashboardPage() {
         onOpenChange={setShowCreate}
         onCreated={loadProjects}
       />
+
+      {editingProject && (
+        <EditProjectDialog
+          open={!!editingProject}
+          onOpenChange={(open) => { if (!open) setEditingProject(null) }}
+          project={editingProject}
+          onUpdated={() => { loadProjects(); setEditingProject(null) }}
+        />
+      )}
     </div>
   )
 }
