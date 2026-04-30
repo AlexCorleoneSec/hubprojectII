@@ -225,3 +225,4 @@ NEXT_PUBLIC_API_URL=/api
 | `002_reorder_functions.sql` | Funções RPC para reordenação de tasks |
 | `003_subtasks_and_timelogs.sql` | Subtasks, time_logs, tags e estimated_hours em tasks |
 | `004_customers.sql` | Entidade customers, customer_id em projects, função get_project_timelogs |
+
