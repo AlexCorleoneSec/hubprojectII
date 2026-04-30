@@ -12,6 +12,71 @@ packages/
 └── web/      Frontend Next.js (App Router)
 ```
 
+## Setup Inicial (Ao Clonar)
+
+### Pré-requisitos
+
+- **Node.js** 18+ (recomendado 20 LTS)
+- **npm** 9+
+- **Supabase CLI** (para aplicar migrações): `npm install -g supabase`
+
+### Passos
+
+1. **Clone o repositório:**
+   ```bash
+   git clone <repo-url>
+   cd "Gerenciador de Projetos"
+   ```
+
+2. **Instale as dependências** (da raiz):
+   ```bash
+   npm install
+   ```
+
+3. **Configure variáveis de ambiente:**
+   
+   Crie dois arquivos `.env.local` (um em cada pacote):
+
+   **`packages/api/.env.local`:**
+   ```env
+   SUPABASE_URL=https://[project-ref].supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+   ```
+
+   **`packages/web/.env.local`:**
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://[project-ref].supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+   NEXT_PUBLIC_API_URL=/api
+   ```
+
+   ⚠️ **Aviso:** Não existe outro projeto Supabase com essas credenciais. As variáveis precisam ser preenchidas com valores válidos do seu próprio projeto.
+
+4. **Aplique as migrações Supabase:**
+   ```bash
+   supabase db push
+   ```
+   Isso cria as tabelas, índices, RLS policies e funções no banco de dados.
+
+5. **Rode em desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+   Abre simultaneamente:
+   - Frontend: `http://localhost:3000`
+   - API: `http://localhost:3001` (ou integrada no Next.js)
+
+6. **Verificar type safety:**
+   ```bash
+   npm run typecheck
+   ```
+
+### Troubleshooting
+
+- **"SUPABASE_URL is not set"**: Verifique que o `.env.local` está na pasta certa (`packages/api/` para API, `packages/web/` para frontend).
+- **"Migrações falharam"**: Confirme que `supabase db push` foi executado e que as credenciais Supabase estão corretas.
+- **Porta já em uso**: Mude a porta em `next.config.js` ou encerre o processo anterior.
+
 ## Modelo de Dados
 
 ```
