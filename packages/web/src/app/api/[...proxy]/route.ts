@@ -23,13 +23,15 @@ async function withAuth(request: NextRequest): Promise<NextResponse> {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession() decodes the JWT locally (no network call)
+  // The middleware already validated the token with getUser() on every request
+  const { data: { session } } = await supabase.auth.getSession()
 
-  if (!user) {
+  if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
   }
 
-  return handleApiRoute(request, user.id)
+  return handleApiRoute(request, session.user.id)
 }
 
 export async function GET(request: NextRequest) {
