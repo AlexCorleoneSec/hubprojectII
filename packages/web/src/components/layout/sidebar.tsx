@@ -23,9 +23,9 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const supabase = createClient()
 
   async function handleSignOut() {
+    const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = '/login'
   }

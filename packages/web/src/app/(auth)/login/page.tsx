@@ -15,9 +15,8 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
-
   async function handleSubmit(e: React.FormEvent) {
+    const supabase = createClient()
     e.preventDefault()
     setLoading(true)
     setError(null)

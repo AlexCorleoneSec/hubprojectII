@@ -13,10 +13,10 @@ export default function InvitePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
   const token = params.token as string
 
   async function handleAcceptInvite(e: React.FormEvent) {
+    const supabase = createClient()
     e.preventDefault()
     setLoading(true)
     setError(null)
