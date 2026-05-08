@@ -3,9 +3,17 @@
 import { memo } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Calendar, AlertTriangle, Check } from 'lucide-react'
+import { Calendar, AlertTriangle, Check, Clock } from 'lucide-react'
 import { type Task, TASK_PRIORITIES, QUADRANTS } from '@hubproject/shared'
 import { cn, formatDate } from '@/lib/utils'
+
+function formatHours(hours: number): string {
+  const h = Math.floor(hours)
+  const min = Math.round((hours - h) * 60)
+  if (h === 0) return `${min}min`
+  if (min === 0) return `${h}h`
+  return `${h}h ${min}min`
+}
 
 interface TaskCardProps {
   task: Task
@@ -86,6 +94,30 @@ export const TaskCard = memo(function TaskCard({ task, onCardClick, isDragging }
         </div>
       )}
 
+      {/* Subtask progress */}
+      {(task.subtask_count ?? 0) > 0 && (
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1 text-[10px] text-text-muted">
+              <Check className="w-3 h-3" />
+              <span>{task.subtask_done_count}/{task.subtask_count}</span>
+            </div>
+            {(task.total_hours_logged ?? 0) > 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-accent">
+                <Clock className="w-3 h-3" />
+                <span>{formatHours(task.total_hours_logged!)}</span>
+              </div>
+            )}
+          </div>
+          <div className="h-1 rounded-full bg-surface-4 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-accent transition-all"
+              style={{ width: `${Math.round(((task.subtask_done_count ?? 0) / (task.subtask_count ?? 1)) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -100,7 +132,9 @@ export const TaskCard = memo(function TaskCard({ task, onCardClick, isDragging }
           )}
           {task.estimated_hours != null && (
             <span className="text-[10px] text-text-muted">
-              {task.estimated_hours}h est.
+              {(task.total_hours_logged ?? 0) > 0
+                ? `${formatHours(task.total_hours_logged!)} / ${task.estimated_hours}h`
+                : `${task.estimated_hours}h est.`}
             </span>
           )}
         </div>

@@ -46,13 +46,22 @@ function SideField({ label, icon: Icon, children }: {
   )
 }
 
+function formatHoursLog(hours: number | string): string {
+  const h = Number(hours)
+  const hi = Math.floor(h)
+  const min = Math.round((h - hi) * 60)
+  if (hi === 0) return `${min}min`
+  if (min === 0) return `${hi}h`
+  return `${hi}h ${min}min`
+}
+
 // ── Time log item ──────────────────────────────────────────────────────────
 function TimeLogItem({ log, onDelete }: { log: TimeLog; onDelete: () => void }) {
   return (
     <div className="flex items-center gap-2 py-1.5 group/log">
       <div className="flex-1 min-w-0">
         <span className="text-xs text-text-secondary">
-          {log.log_date} · <span className="font-medium text-accent">{log.hours}h</span>
+          {log.log_date} · <span className="font-medium text-accent">{formatHoursLog(log.hours)}</span>
           {log.logged_by && <span className="text-text-muted"> · {log.logged_by}</span>}
         </span>
         {log.description && (
@@ -85,7 +94,8 @@ function SubtaskItem({
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>([])
   const [loadingLogs, setLoadingLogs] = useState(false)
   const [showLogForm, setShowLogForm] = useState(false)
-  const [logHours, setLogHours] = useState('')
+  const [logH, setLogH] = useState('')
+  const [logMin, setLogMin] = useState('')
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
   const [logDesc, setLogDesc] = useState('')
   const [loggedBy, setLoggedBy] = useState('')
@@ -114,17 +124,19 @@ function SubtaskItem({
   }
 
   async function handleSaveLog() {
-    if (!logHours || Number(logHours) <= 0) return
+    const totalDecimal = (Number(logH) || 0) + (Number(logMin) || 0) / 60
+    if (totalDecimal <= 0) return
     setSavingLog(true)
     try {
       const log = await api.post<TimeLog>(`/subtasks/${subtask.id}/timelogs`, {
-        hours: Number(logHours),
+        hours: Math.round(totalDecimal * 100) / 100,
         log_date: logDate,
         description: logDesc || undefined,
         logged_by: loggedBy || undefined,
       })
       setTimeLogs((prev) => [log, ...prev])
-      setLogHours('')
+      setLogH('')
+      setLogMin('')
       setLogDesc('')
       setShowLogForm(false)
     } finally {
@@ -192,7 +204,7 @@ function SubtaskItem({
 
         {totalHours > 0 && !expanded && (
           <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded-full font-medium">
-            {totalHours.toFixed(1)}h
+            {formatHoursLog(totalHours)}
           </span>
         )}
 
@@ -241,7 +253,7 @@ function SubtaskItem({
                 <Clock className="w-3 h-3" />
                 Horas lançadas
                 {totalHours > 0 && (
-                  <span className="text-accent font-semibold">— {totalHours.toFixed(1)}h</span>
+                  <span className="text-accent font-semibold">— {formatHoursLog(totalHours)}</span>
                 )}
               </span>
               <button
@@ -257,16 +269,28 @@ function SubtaskItem({
               <div className="p-2.5 bg-surface-2 border border-border rounded-xl space-y-2 mb-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] text-text-muted mb-1">Horas *</label>
-                    <input
-                      type="number"
-                      step="0.25"
-                      min="0.25"
-                      value={logHours}
-                      onChange={(e) => setLogHours(e.target.value)}
-                      placeholder="0.0"
-                      className="w-full h-7 px-2 bg-surface-3 border border-border rounded-lg text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/40"
-                    />
+                    <label className="block text-[10px] text-text-muted mb-1">Tempo *</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        value={logH}
+                        onChange={(e) => setLogH(e.target.value)}
+                        placeholder="0"
+                        className="w-full h-7 px-2 bg-surface-3 border border-border rounded-lg text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/40"
+                      />
+                      <span className="text-[10px] text-text-muted flex-shrink-0">h</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={logMin}
+                        onChange={(e) => setLogMin(e.target.value)}
+                        placeholder="0"
+                        className="w-full h-7 px-2 bg-surface-3 border border-border rounded-lg text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/40"
+                      />
+                      <span className="text-[10px] text-text-muted flex-shrink-0">min</span>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] text-text-muted mb-1">Data</label>
@@ -295,7 +319,7 @@ function SubtaskItem({
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveLog}
-                    disabled={savingLog || !logHours}
+                    disabled={savingLog || (!logH && !logMin)}
                     className="flex items-center gap-1.5 h-7 px-3 bg-accent text-white text-xs rounded-lg disabled:opacity-50 hover:opacity-90 transition-all"
                   >
                     {savingLog ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}

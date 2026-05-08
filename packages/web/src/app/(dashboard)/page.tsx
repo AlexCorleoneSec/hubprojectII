@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, FolderKanban, Pencil, ExternalLink, Building2 } from 'lucide-react'
+import { Plus, FolderKanban, Pencil, ExternalLink, Building2, Users } from 'lucide-react'
 import { type Project, type Customer, PROJECT_STATUSES } from '@hubproject/shared'
 import { api } from '@/lib/api-client'
 import { formatDate } from '@/lib/utils'
@@ -36,6 +36,11 @@ export default function DashboardPage() {
     }
   }
 
+  const activeProjects = projects.filter((p) => p.status === 'active')
+  const activeClientIds = new Set(
+    activeProjects.filter((p) => p.customer_id).map((p) => p.customer_id)
+  )
+
   return (
     <div>
       {/* Header */}
@@ -54,6 +59,30 @@ export default function DashboardPage() {
           Novo Projeto
         </button>
       </div>
+
+      {/* Stats */}
+      {!loading && projects.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+          <div className="glass-card p-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <FolderKanban className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-text-primary">{activeProjects.length}</p>
+              <p className="text-[11px] text-text-muted">projeto{activeProjects.length !== 1 && 's'} ativo{activeProjects.length !== 1 && 's'}</p>
+            </div>
+          </div>
+          <div className="glass-card p-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-text-primary">{activeClientIds.size}</p>
+              <p className="text-[11px] text-text-muted">cliente{activeClientIds.size !== 1 && 's'} com projetos ativos</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Projects grid */}
       {loading ? (

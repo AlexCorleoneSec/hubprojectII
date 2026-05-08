@@ -7,13 +7,28 @@ const TABLE = 'tasks'
 export async function findByProject(projectId: string): Promise<Task[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select('*, subtasks(id, is_done, time_logs(hours))')
     .eq('project_id', projectId)
     .eq('is_suggestion', false)
     .order('position', { ascending: true })
 
   if (error) throw error
-  return data as Task[]
+
+  return (data as (Task & { subtasks?: { id: string; is_done: boolean; time_logs?: { hours: number }[] }[] })[]).map((row) => {
+    const subs = row.subtasks ?? []
+    const subtask_count = subs.length
+    const subtask_done_count = subs.filter((s) => s.is_done).length
+    const total_hours_logged = subs.reduce((sum, s) => {
+      return sum + (s.time_logs ?? []).reduce((h, tl) => h + Number(tl.hours), 0)
+    }, 0)
+    const { subtasks: _, ...task } = row as typeof row & { subtasks: unknown }
+    return {
+      ...task,
+      subtask_count,
+      subtask_done_count,
+      total_hours_logged: total_hours_logged > 0 ? total_hours_logged : 0,
+    } as Task
+  })
 }
 
 export async function findById(id: string): Promise<Task | null> {

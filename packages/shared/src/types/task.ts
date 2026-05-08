@@ -23,6 +23,10 @@ export interface Task {
   position: number
   created_at: string
   updated_at: string
+  // Computed aggregates (populated by API when listing project tasks)
+  subtask_count?: number
+  subtask_done_count?: number
+  total_hours_logged?: number
 }
 
 export interface CreateTaskInput {
